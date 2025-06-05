@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    container_name: project
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/project_tracker
+      - SPRING.DATA.MONGODB.URI=mongodb://localhost:27017/project_tracker
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Abame123456
+    depends_on:
+      - mysql
+      - mongo
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: pt-mysql
+    environment:
+      - MYSQL_DATABASE=project_tracker
+      - MYSQL_ROOT_PASSWORD=Abame123456
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:latest
+    container_name: pt-mongo
+    environment:
+      - MONGO_INITDB_DATABASE=project_tracker
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  mongo_data:

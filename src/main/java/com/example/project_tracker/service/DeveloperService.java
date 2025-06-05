@@ -7,9 +7,14 @@ import com.example.project_tracker.mapper.DeveloperMapper;
 import com.example.project_tracker.models.Developer;
 import com.example.project_tracker.repository.DeveloperRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,10 +41,24 @@ public class DeveloperService {
         return DeveloperMapper.toDTO(saved);
     }
 
-    public List<DeveloperResponseDTO> getAllDevelopers() {
-        return developerRepository.findAll().stream()
+    public Map<String, Object> getAllDevelopers(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Developer> developerPage = developerRepository.findAll(pageable);
+
+        List<DeveloperResponseDTO> developerDTOs = developerPage.getContent()
+                .stream()
                 .map(task -> DeveloperMapper.toDTO(task))
                 .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("developers", developerDTOs);
+        response.put("currentPage", developerPage.getNumber());
+        response.put("totalItems", developerPage.getTotalElements());
+        response.put("totalPages", developerPage.getTotalPages());
+
+        return response;
+
     }
 
     public DeveloperResponseDTO getDeveloperById(Long id) {

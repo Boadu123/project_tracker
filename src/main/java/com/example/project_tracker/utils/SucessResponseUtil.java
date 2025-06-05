@@ -10,9 +10,9 @@ public class SucessResponseUtil {
 
     public static ResponseEntity<Map<String, Object>> sucessResponseUtil(HttpStatus status, Object data) {
         Map<String, Object> body = new HashMap<>();
-        body.put("statusCode", status.value());
-        body.put("status", "success");
         body.put("data", data);
+        body.put("message", "success");
+        body.put("status", status.value());
         return new ResponseEntity<>(body, status);
     }
 }

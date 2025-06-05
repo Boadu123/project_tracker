@@ -2,9 +2,14 @@ package com.example.project_tracker.controllers;
 
 import com.example.project_tracker.models.AuditLog;
 import com.example.project_tracker.service.AuditLogService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+
+import static com.example.project_tracker.utils.SucessResponseUtil.sucessResponseUtil;
 
 @RestController
 @RequestMapping("/api/logs")
@@ -17,17 +22,20 @@ public class AuditLogController {
     }
 
     @GetMapping
-    public List<AuditLog> getAllLogs() {
-        return auditLogService.getAllLogs();
+    public ResponseEntity<Map<String, Object>> getAllLogs() {
+        List<AuditLog> logs = auditLogService.getAllLogs();
+        return sucessResponseUtil(HttpStatus.OK, logs);
     }
 
     @GetMapping("/entity/{entityType}")
-    public List<AuditLog> getLogsByEntityType(@PathVariable String entityType) {
-        return auditLogService.getLogsByEntityType(entityType);
+    public ResponseEntity<Map<String, Object>> getLogsByEntityType(@PathVariable String entityType) {
+        List<AuditLog> logs = auditLogService.getLogsByEntityType(entityType);
+        return sucessResponseUtil(HttpStatus.OK, logs);
     }
 
     @GetMapping("/actor/{actorName}")
-    public List<AuditLog> getLogsByActorName(@PathVariable String actorName) {
-        return auditLogService.getLogsByActorName(actorName);
+    public ResponseEntity<Map<String, Object>> getLogsByActorName(@PathVariable String actorName) {
+        List<AuditLog> logs = auditLogService.getLogsByActorName(actorName);
+        return sucessResponseUtil(HttpStatus.OK, logs);
     }
 }
