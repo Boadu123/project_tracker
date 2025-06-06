@@ -9,9 +9,9 @@ A robust **Spring Boot** REST API for Project Tracker with full CRUD operations,
 ## Features ✨
 
 - **Complete Project Tracker**:
-    - Create, read, update, and delete tasks
-    - Filter by status (`PENDING`, `COMPLETED`, `FAILED`, `IN_PROGRESS`)
-    - Filter by priority (`HIGH`, `MEDIUM`, `LOW`)
+    - Create, read, update, and delete Developers, Task and Project
+    - Sort Task by status, creation time and due date
+    - Paginated retrieving all Developers
 
 - **Modern Architecture**:
     - Clean layered design (Controller → Service → Repository)
@@ -145,12 +145,12 @@ project_tracker/
 graph TD
 
 %% Main Components
-Developer[<<Component>>\nDeveloper Service]
-Project[<<Component>>\nProject Service]
-Task[<<Component>>\nTask Service]
-AuditLog[<<Component>>\nAudit Logging Service]
-Database[(<<Database>>\nRelational DB)]
-MongoDB[(<<Database>>\nMongoDB - Audit Logs)]
+Developer["Component: Developer Service"]
+Project["Component: Project Service"]
+Task["Component: Task Service"]
+AuditLog["Component: Audit Logging Service"]
+Database["Database: Relational DB"]
+MongoDB["Database: MongoDB - Audit Logs"]
 
 %% Relationships
 Developer -->|Manages| Task
@@ -167,8 +167,8 @@ Task -->|Logs Actions| AuditLog
 Project -->|Logs Actions| AuditLog
 
 %% Optional UI & API Gateway
-UI[<<Interface>>\nFrontend (React/Angular)]
-APIGateway[<<Component>>\nSpring Boot REST API]
+UI["Interface: Frontend (React/Angular)"]
+APIGateway["Component: Spring Boot REST API"]
 
 UI --> APIGateway
 APIGateway --> Developer
