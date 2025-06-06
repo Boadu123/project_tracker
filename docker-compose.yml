@@ -5,8 +5,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/project_tracker
-      - SPRING.DATA.MONGODB.URI=mongodb://localhost:27017/project_tracker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://pt-mysql:3306/project_tracker
+      - SPRING_DATA_MONGODB_URI=mongodb://pt-mongo:27017/project_tracker
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Abame123456
     depends_on:

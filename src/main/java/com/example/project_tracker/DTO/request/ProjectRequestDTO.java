@@ -12,6 +12,7 @@ public class ProjectRequestDTO {
     @NotBlank(message = "Project name is required")
     private String name;
 
+    @NotBlank(message = "description must not be blank")
     private String description;
 
     @NotNull(message = "Deadline date is required")
@@ -25,11 +26,12 @@ public class ProjectRequestDTO {
 
     public ProjectRequestDTO() {}
 
-    public ProjectRequestDTO(String name, String description, LocalDate deadline, ProjectStatus status) {
+    public ProjectRequestDTO(String name, String description, LocalDate deadline, ProjectStatus status, Set<String> task) {
         this.name = name;
         this.description = description;
         this.deadline = deadline;
         this.status = status;
+        this.task = task;
     }
 
     public String getName() {
@@ -64,11 +66,20 @@ public class ProjectRequestDTO {
         this.status = status;
     }
 
+    public Set<String> getTask() {
+        return task;
+    }
+
+    public void setTask(Set<String> task) {
+        this.task = task;
+    }
+
     public static class Builder {
         private String name;
         private String description;
         private LocalDate deadline;
         private ProjectStatus status;
+        private Set<String> task;  // add this field
 
         public Builder name(String name) {
             this.name = name;
@@ -90,12 +101,14 @@ public class ProjectRequestDTO {
             return this;
         }
 
+        public Builder task(Set<String> task) {
+            this.task = task;
+            return this;
+        }
+
         public ProjectRequestDTO build() {
-            return new ProjectRequestDTO(name, description, deadline, status);
+            return new ProjectRequestDTO(name, description, deadline, status, task);
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
 }
