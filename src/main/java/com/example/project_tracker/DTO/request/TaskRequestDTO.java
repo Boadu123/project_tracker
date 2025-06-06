@@ -16,6 +16,7 @@ public class TaskRequestDTO {
     @NotNull(message = "Status can't be null")
     private TaskStatus status;
 
+    @NotNull(message = "date is required")
     private LocalDate dueDate;
 
     @NotNull(message = "Project ID can't be null")

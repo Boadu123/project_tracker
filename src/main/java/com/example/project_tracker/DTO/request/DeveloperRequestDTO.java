@@ -8,11 +8,11 @@ import java.util.Set;
 
 public class DeveloperRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "name must not be blank")
     private String name;
 
     @Email
-    @NotBlank
+    @NotBlank(message = "email must not be blank")
     private String email;
 
     @NotEmpty(message = "At least one skill is required")

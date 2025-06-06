@@ -13,9 +13,11 @@ import com.example.project_tracker.repository.DeveloperRepository;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -119,6 +121,25 @@ public class TaskService {
         return taskRepository.findByDeveloperId(developerId).stream()
                 .map(TaskMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<TaskResponseDTO> getOverdueTasks() {
+        return taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), "COMPLETED")
+                .stream()
+                .map(TaskMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<TaskRepository.TopDeveloperProjection> getTop5DevelopersWithMostTasks() {
+        return taskRepository.findTop5Developers(PageRequest.of(0, 5));
+    }
+
+    public List<Project> getProjectsWithoutTasks() {
+        return projectRepository.findProjectsWithoutTasks();
+    }
+
+    public List<TaskRepository.TaskStatusCountProjection> getTaskCountsByStatus() {
+        return taskRepository.getTaskCountGroupedByStatus();
     }
 
 }
