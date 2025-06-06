@@ -30,8 +30,8 @@ public class DeveloperController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllDevelopers() {
-        List<DeveloperResponseDTO> response = developerService.getAllDevelopers();
+    public ResponseEntity<Map<String, Object>> getAllDevelopers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "2") int size) {
+        Map<String, Object> response = developerService.getAllDevelopers(page, size);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 

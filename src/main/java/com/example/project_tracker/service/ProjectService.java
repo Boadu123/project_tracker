@@ -6,6 +6,9 @@ import com.example.project_tracker.exceptions.ProjectNotFoundException;
 import com.example.project_tracker.mapper.ProjectMapper;
 import com.example.project_tracker.models.Project;
 import com.example.project_tracker.repository.ProjectRepository;
+import com.example.project_tracker.repository.TaskRepository;
+import org.springframework.cache.annotation.Cacheable;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +19,12 @@ import java.util.stream.Collectors;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final TaskRepository taskRepository;
     private final AuditLogService auditLogService;
 
-    public ProjectService(ProjectRepository projectRepository, AuditLogService auditLogService) {
+    public ProjectService(ProjectRepository projectRepository, AuditLogService auditLogService, TaskRepository taskRepository) {
         this.projectRepository = projectRepository;
+        this.taskRepository = taskRepository;
         this.auditLogService = auditLogService;
     }
 
@@ -30,12 +35,14 @@ public class ProjectService {
         return ProjectMapper.toDTO(saved);
     }
 
+    @Cacheable(value = "projects")
     public List<ProjectResponseDTO> getAllProjects() {
         return projectRepository.findAll().stream()
                 .map(ProjectMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "projectById", key = "#id")
     public ProjectResponseDTO getProjectById(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
@@ -57,9 +64,13 @@ public class ProjectService {
         return ProjectMapper.toDTO(updated);
     }
 
+    @Transactional
     public void deleteProject(Long id) {
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
+
+        taskRepository.deleteByProjectId(id);
+
         auditLogService.logAction("DELETE", "Project", existing.getId().toString(), existing.getName().toString(), existing);
 
         projectRepository.delete(existing);

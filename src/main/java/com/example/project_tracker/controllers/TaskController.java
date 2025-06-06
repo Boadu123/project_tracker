@@ -31,8 +31,8 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllTasks() {
-        List<TaskResponseDTO> response = taskService.getAllTasks();
+    public ResponseEntity<Map<String, Object>> getAllTasks(@RequestParam(defaultValue = "dueDate") String sortBy) {
+        List<TaskResponseDTO> response = taskService.getAllTasks(sortBy);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 

@@ -13,6 +13,7 @@ import com.example.project_tracker.repository.DeveloperRepository;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,8 +52,15 @@ public class TaskService {
         return TaskMapper.toDTO(saved);
     }
 
-    public List<TaskResponseDTO> getAllTasks() {
-        return taskRepository.findAll().stream()
+    public List<TaskResponseDTO> getAllTasks(String sortBy) {
+        List<String> allowedFields = List.of("dueDate", "status", "createdAt");
+        if (!allowedFields.contains(sortBy)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortBy);
+        }
+
+        Sort sort = Sort.by(Sort.Direction.ASC, sortBy);
+
+        return taskRepository.findAll(sort).stream()
                 .map(TaskMapper::toDTO)
                 .collect(Collectors.toList());
     }
