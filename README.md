@@ -74,8 +74,11 @@ Interactive API documentation is available at:
 http://localhost:8080/swagger-ui/index.html
 
 Only Admins has access to the console
+
 ![Screenshot 2025-06-15 115437.png](Screenshot%202025-06-15%20115437.png)
+
 ![Screenshot 2025-06-15 115536.png](Screenshot%202025-06-15%20115536.png)
+
 ![Screenshot 2025-06-15 115624.png](Screenshot%202025-06-15%20115624.png)
 
 The Endpoints below can be accessed without being authenticated

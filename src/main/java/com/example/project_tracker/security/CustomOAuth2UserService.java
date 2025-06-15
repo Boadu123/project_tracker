@@ -28,17 +28,19 @@ public class CustomOAuth2UserService extends OidcUserService {
         OidcUser oidcUser = super.loadUser(userRequest);
         String email = oidcUser.getEmail();
 
-        User user = null;
-        if(!userRepository.existsByEmail(email)){
-            User newUser = User.builder().password("Not available").email(email).roles(Roles.ROLE_CONTRACTOR).build();
-            user = userRepository.save(newUser);
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .password("Not available")
+                            .email(email)
+                            .roles(Roles.ROLE_CONTRACTOR)
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
+        List<GrantedAuthority> grantedAuthority =
+                List.of(new SimpleGrantedAuthority(user.getRoles().toString()));
 
-        List<GrantedAuthority> grantedAuthority = new ArrayList<>(List.of(new SimpleGrantedAuthority(user.getRoles().toString())));
-
-        return new DefaultOidcUser(
-                grantedAuthority, oidcUser.getIdToken(), oidcUser.getUserInfo()
-        );
+        return new DefaultOidcUser(grantedAuthority, oidcUser.getIdToken(), oidcUser.getUserInfo());
     }
 }
