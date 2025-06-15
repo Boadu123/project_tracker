@@ -16,25 +16,27 @@ public class TaskRequestDTO {
     @NotNull(message = "Status can't be null")
     private TaskStatus status;
 
-    @NotNull(message = "date is required")
+    @NotNull(message = "Due date is required")
     private LocalDate dueDate;
 
-    @NotNull(message = "Project ID can't be null")
+    @NotNull(message = "Project ID is required")
     private Long projectId;
 
-    @NotNull(message = "Developer ID can't be null")
-    private Long developerId;
+    @NotNull(message = "User ID is required")
+    private Long userId;
 
     public TaskRequestDTO() {}
 
-    public TaskRequestDTO(String title, String description, TaskStatus status, LocalDate dueDate, Long projectId, Long developerId) {
+    public TaskRequestDTO(String title, String description, TaskStatus status, LocalDate dueDate, Long projectId, Long userId) {
         this.title = title;
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
         this.projectId = projectId;
-        this.developerId = developerId;
+        this.userId = userId;
     }
+
+    // Getters and Setters
 
     public String getTitle() {
         return title;
@@ -76,12 +78,12 @@ public class TaskRequestDTO {
         this.projectId = projectId;
     }
 
-    public Long getDeveloperId() {
-        return developerId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setDeveloperId(Long developerId) {
-        this.developerId = developerId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public static class Builder {
@@ -90,7 +92,7 @@ public class TaskRequestDTO {
         private TaskStatus status;
         private LocalDate dueDate;
         private Long projectId;
-        private Long developerId;
+        private Long userId;
 
         public Builder title(String title) {
             this.title = title;
@@ -117,13 +119,13 @@ public class TaskRequestDTO {
             return this;
         }
 
-        public Builder developerId(Long developerId) {
-            this.developerId = developerId;
+        public Builder userId(Long userId) {
+            this.userId = userId;
             return this;
         }
 
         public TaskRequestDTO build() {
-            return new TaskRequestDTO(title, description, status, dueDate, projectId, developerId);
+            return new TaskRequestDTO(title, description, status, dueDate, projectId, userId);
         }
     }
 

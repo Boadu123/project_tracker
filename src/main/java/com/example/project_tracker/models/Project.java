@@ -27,19 +27,26 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectStatus status;
 
-    @OneToMany(mappedBy = "projectId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
 
     public Project() {}
 
-    public Project(Long id, String name, String description, LocalDate deadline, ProjectStatus status, List<Task> tasks) {
+    public Project(Long id, String name, String description, LocalDate deadline, ProjectStatus status, List<Task> tasks, User user) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.deadline = deadline;
         this.status = status;
         this.tasks = tasks;
+        this.user = user;
     }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -89,12 +96,21 @@ public class Project {
         this.tasks = tasks;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public static class Builder {
         private String name;
         private String description;
         private LocalDate deadline;
         private ProjectStatus status;
         private List<Task> tasks;
+        private User user;
 
         public Builder name(String name) {
             this.name = name;
@@ -121,6 +137,11 @@ public class Project {
             return this;
         }
 
+        public Builder user(User user) {
+            this.user = user;
+            return this;
+        }
+
         public Project build() {
             Project project = new Project();
             project.setName(this.name);
@@ -128,6 +149,7 @@ public class Project {
             project.setDeadline(this.deadline);
             project.setStatus(this.status);
             project.setTasks(this.tasks);
+            project.setUser(this.user);
             return project;
         }
     }

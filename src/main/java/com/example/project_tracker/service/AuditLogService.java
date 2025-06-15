@@ -2,6 +2,7 @@ package com.example.project_tracker.service;
 
 import com.example.project_tracker.models.AuditLog;
 import com.example.project_tracker.repository.AuditLogRepository;
+import com.example.project_tracker.service.interfaces.AuditLogServiceInterface;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class AuditLogService {
+public class AuditLogService implements AuditLogServiceInterface {
 
     private final AuditLogRepository auditLogRepository;
 

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE NOT EXISTS " +
-            "(SELECT t FROM Task t WHERE t.projectId = p.id)")
+            "(SELECT t FROM Task t WHERE t.project.id = p.id)")
     List<Project> findProjectsWithoutTasks();
 
 

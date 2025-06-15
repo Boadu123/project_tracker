@@ -11,20 +11,21 @@ public class TaskResponseDTO {
     private TaskStatus status;
     private LocalDate dueDate;
     private Long projectId;
-    private Long developerId;
+    private Long userId;
 
-    public TaskResponseDTO() {
-    }
+    public TaskResponseDTO() {}
 
-    public TaskResponseDTO(Long id, String title, String description, TaskStatus status, LocalDate dueDate, Long projectId, Long developerId) {
+    public TaskResponseDTO(Long id, String title, String description, TaskStatus status, LocalDate dueDate, Long projectId, Long userId) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
         this.projectId = projectId;
-        this.developerId = developerId;
+        this.userId = userId;
     }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -74,11 +75,11 @@ public class TaskResponseDTO {
         this.projectId = projectId;
     }
 
-    public Long getDeveloperId() {
-        return developerId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setDeveloperId(Long developerId) {
-        this.developerId = developerId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
