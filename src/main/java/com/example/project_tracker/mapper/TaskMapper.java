@@ -2,36 +2,41 @@ package com.example.project_tracker.mapper;
 
 import com.example.project_tracker.DTO.request.TaskRequestDTO;
 import com.example.project_tracker.DTO.response.TaskResponseDTO;
-import com.example.project_tracker.models.Developer;
+import com.example.project_tracker.models.User;
 import com.example.project_tracker.models.Project;
 import com.example.project_tracker.models.Task;
 
 public class TaskMapper {
-    public static Task toEntity(TaskRequestDTO dto, Developer developer, Project project) {
+
+    public static Task toEntity(TaskRequestDTO dto, User developer, Project project) {
         Task task = new Task();
-        task.setDescription(dto.getDescription());
         task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
         task.setStatus(dto.getStatus());
-        task.setDeveloperId(dto.getDeveloperId());
         task.setDueDate(dto.getDueDate());
-        task.setProjectId(dto.getProjectId());
+
+        task.setUser(developer);
+        task.setProject(project);
+
         return task;
     }
 
     public static TaskResponseDTO toDTO(Task task) {
-        TaskResponseDTO responseDTO = new TaskResponseDTO();
-        responseDTO.setId(task.getId());
-        responseDTO.setTitle(task.getTitle());
-        responseDTO.setDescription(task.getDescription());
-        responseDTO.setStatus(task.getStatus());
-        if (task.getDeveloperId() != null) {
-            responseDTO.setDeveloperId(task.getDeveloperId());
+        TaskResponseDTO dto = new TaskResponseDTO();
+        dto.setId(task.getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setStatus(task.getStatus());
+        dto.setDueDate(task.getDueDate());
+
+        if (task.getUser() != null) {
+            dto.setUserId(task.getUser().getId());
         }
-        responseDTO.setDueDate(task.getDueDate());
-        if (task.getProjectId() != null) {
-            responseDTO.setProjectId(task.getProjectId());
+
+        if (task.getProject() != null) {
+            dto.setProjectId(task.getProject().getId());
         }
-        return responseDTO;
+
+        return dto;
     }
 }
-

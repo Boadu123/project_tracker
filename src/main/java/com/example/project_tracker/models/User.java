@@ -1,42 +1,42 @@
 package com.example.project_tracker.models;
 
+import com.example.project_tracker.enums.Roles;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-
 import java.util.Set;
 
 @Entity
-@Table(name = "developer")
-public class Developer {
+@Table(name = "users")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     private String name;
 
-    @Email
-    @NotBlank
     @Column(nullable = false, unique = true)
     private String email;
 
-    @ElementCollection
+    private String password;
+
+    @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> skills;
 
-    @OneToMany(mappedBy = "developerId")
-    private Set<Task> tasks;
+    @Enumerated(EnumType.STRING)
+    private Roles roles;
 
-    public Developer() {}
 
-    public Developer(Long id, String name, String email, Set<String> skills, Set<Task> tasks) {
+    public User() {}
+
+    public User(Long id, String name, String email, String password, Set<String> skills, Roles roles) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.skills = skills;
-        this.tasks = tasks;
+        this.password = password;
+        this.roles = roles;
     }
+
 
     public Long getId() {
         return id;
@@ -70,18 +70,28 @@ public class Developer {
         this.skills = skills;
     }
 
-    public Set<Task> getTasks() {
-        return tasks;
+    public String getPassword() {
+        return password;
     }
 
-    public void setTasks(Set<Task> tasks) {
-        this.tasks = tasks;
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Roles getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Roles roles) {
+        this.roles = roles;
     }
 
     public static class Builder {
         private String name;
         private String email;
+        private String password;
         private Set<String> skills;
+        private Roles roles;
 
         public Builder name(String name) {
             this.name = name;
@@ -93,17 +103,29 @@ public class Developer {
             return this;
         }
 
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
         public Builder skills(Set<String> skills) {
             this.skills = skills;
             return this;
         }
 
-        public Developer build() {
-            Developer developer = new Developer();
-            developer.setName(this.name);
-            developer.setEmail(this.email);
-            developer.setSkills(this.skills);
-            return developer;
+        public Builder roles(Roles roles) {
+            this.roles = roles;
+            return this;
+        }
+
+        public User build() {
+            User user = new User();
+            user.setName(this.name);
+            user.setEmail(this.email);
+            user.setSkills(this.skills);
+            user.setPassword(this.password);
+            user.setRoles(this.roles);
+            return user;
         }
     }
 

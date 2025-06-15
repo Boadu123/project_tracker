@@ -9,9 +9,11 @@ A robust **Spring Boot** REST API for Project Tracker with full CRUD operations,
 ## Features ✨
 
 - **Complete Project Tracker**:
-    - Create, read, update, and delete Developers, Task and Project
+    - Create, read, update, and delete Users, Task and Project
     - Sort Task by status, creation time and due date
     - Paginated retrieving all Developers
+    - Authentication is implemented using JWT to securely verify users before accessing protected endpoints
+    - Role-based authorization restricts access based on user roles. 
 
 - **Modern Architecture**:
     - Clean layered design (Controller → Service → Repository)
@@ -69,76 +71,140 @@ docker-compose up --bild .
 
 Interactive API documentation is available at:
 ```
-https://documenter.getpostman.com/view/29757568/2sB2x2La9W
+http://localhost:8080/swagger-ui/index.html
+
+Only Admins has access to the console
+![Screenshot 2025-06-15 115437.png](Screenshot%202025-06-15%20115437.png)
+![Screenshot 2025-06-15 115536.png](Screenshot%202025-06-15%20115536.png)
+![Screenshot 2025-06-15 115624.png](Screenshot%202025-06-15%20115624.png)
+
+The Endpoints below can be accessed without being authenticated
+"/auth/register",
+```
+{
+    "name": "george",
+    "email": "george@gmail.com",
+    "password": "george7896",
+    "skills": ["Python", "Spring Boot"],
+    "roles": "ROLE_CONTRACTOR"
+}
 ```
 
-## API Endpoints 🌐
-
-Method	Endpoint	Description
-Developer
-POST	/api/developers	Create a new developer
-GET	/api/developers	Get all developers
-GET	/api/developers/{id}	Get a specific developer by ID
-DELETE	/api/developers/{id}	Delete a developer
-PUT	/api/developers/{id}	Update a developer
-
-Project
-POST	/api/projects	Create a new project
-GET	/api/projects	Get all projects
-GET	/api/projects/{id}	Get a specific project by ID
-DELETE	/api/projects/{id}	Delete a project
-PUT	/api/projects/{id}	Update a project
-
-Task
-GET	/api/tasks	Get all tasks
-POST	/api/tasks	Create a new task
-GET	/api/tasks/{id}	Get a specific task by ID
-PUT	/api/tasks/{id}	Update a task
-DELETE	/api/tasks/{id}	Delete a task
-
-AuditLogs
-GET	/api/logs	Get all audit logs
-GET	/api/logs/entity/{entityType}	Get audit logs filtered by entity type
-GET	/api/logs/actor/{actionName}	Get audit logs filtered by action name
+"/auth/login",
 
 ```
+{
+    "email": "george@gmail.com",
+    "password": "george7896"
+}
+```
+"/oauth2/**", 
+
+"/login.html"
 
 ## Project Structure 🗂️
 
 ```
 project_tracker/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/example/project_tracker/
-│   │   │       ├── controllers/       # REST controllers
-│   │   │       ├── DTO/               # Data Transfer Objects
-│   │   │       ├── enums/             # Enum types
-│   │   │       ├── exceptions/        # Custom exceptions
-│   │   │       ├── mapper/            # Mapping logic (e.g., DTO <-> Entity)
-│   │   │       ├── models/            # Domain models
-│   │   │       ├── repository/        # Data access layer
-│   │   │       ├── service/           # Business logic (missing in screenshot, but typically here)
-│   │   │       ├── utils/             # Utility/helper classes
-│   │   │       └── ProjectTrackerApplication.java  # Main Spring Boot class
-│   │   └── resources/
-│   │       ├── static/                # Static assets
-│   │       ├── templates/             # Thymeleaf or other view templates
-│   │       └── application.properties # Application config
-│   └── test/                          # Unit and integration tests
-├── target/                            # Compiled output
-├── .gitignore
-├── .gitattributes
-├── docker-compose.yml
-├── Dockerfile
-├── mvnw / mvnw.cmd                   # Maven wrapper
-├── pom.xml                           # Maven project file
-└── README.md                         # Project documentation
+src/
+└── main/
+    └── java/
+        └── com.example.project_tracker/
+            ├── annotations/
+            │   └── Auditable.java
+            ├── aspects/
+            │   └── AuditAspect.java
+            ├── controllers/
+            │   ├── AuditLogController.java
+            │   ├── AuthController.java
+            │   ├── OAuthController.java
+            │   ├── ProjectController.java
+            │   ├── TaskController.java
+            │   └── UserController.java
+            ├── DTO/
+            │   ├── request/
+            │   │   ├── LoginRequestDTO.java
+            │   │   ├── ProjectRequestDTO.java
+            │   │   ├── TaskRequestDTO.java
+            │   │   └── UserRequestDTO.java
+            │   └── response/
+            │       ├── LoginResponseDTO.java
+            │       ├── ProjectResponseDTO.java
+            │       ├── TaskResponseDTO.java
+            │       └── UserResponseDTO.java
+            ├── enums/
+            │   ├── ProjectStatus.java
+            │   ├── Roles.java
+            │   └── TaskStatus.java
+            ├── exception/
+            │   ├── EmailReadyExistsException.java
+            │   ├── GlobalExceptionHandler.java
+            │   ├── ProjectNotFoundException.java
+            │   ├── ResourceNotFoundException.java
+            │   ├── TaskNotFoundException.java
+            │   └── UserNotFoundException.java
+            ├── mapper/
+            │   ├── ProjectMapper.java
+            │   ├── TaskMapper.java
+            │   └── UserMapper.java
+            ├── models/
+            │   ├── AuditLog.java
+            │   ├── Project.java
+            │   ├── Task.java
+            │   └── User.java
+            ├── repository/
+            │   ├── AuditLogRepository.java
+            │   ├── ProjectRepository.java
+            │   ├── TaskRepository.java
+            │   └── UserRepository.java
+            ├── security/
+            │   └── handlers/
+            │       ├── CustomAccessDeniedHandler.java
+            │       ├── CustomAuthenticationEntryPoint.java
+            │       ├── CustomOAuth2SuccessHandler.java
+            │       ├── CustomOAuth2UserService.java
+            │       ├── CustomUserDetails.java
+            │       ├── CustomUserDetailsService.java
+            │       ├── JwtAuthFilter.java
+            │       ├── JwtUtils.java
+            │       ├── SecurityConfig.java
+            │       └── TaskSecurity.java
+            ├── service/
+            │   ├── interfaces/
+            │   │   ├── AuditLogServletInterface.java
+            │   │   ├── DeveloperServletInterface.java
+            │   │   ├── ProjectServletInterface.java
+            │   │   ├── TaskServletInterface.java
+            │   │   ├── UserServletImplInterface.java
+            │   │   └── UserServletInterface.java
+            │   └── impl/
+            │       ├── AuditLogService.java
+            │       ├── AuthService.java
+            │       ├── ProjectService.java
+            │       ├── TaskService.java
+            │       └── UserService.java
+            └── utils/
+                ├── ErrorResponse.java
+                └── SuccessResponseUtil.java│   │   │      
+                └── ProjectTrackerApplication.java  # Main Spring Boot class
+    │   │   └── resources/
+    │   │       ├── static/                # Static assets
+    │   │       ├── templates/             # Thymeleaf or other view templates
+    │   │       └── application.properties # Application config
+    │   └── test/                          # Unit and integration tests
+    ├── target/                            # Compiled output
+    ├── .gitignore
+    ├── .gitattributes
+    ├── docker-compose.yml
+    ├── Dockerfile
+    ├── mvnw / mvnw.cmd                   # Maven wrapper
+    ├── pom.xml                           # Maven project file
+    └── README.md                         # Project documentation
 ```
 
 ## ERD Diagram 
 
-![Screenshot 2025-06-06 151848.png](Screenshot%202025-06-06%20151848.png)
+![Screenshot 2025-06-15 115833.png](Screenshot%202025-06-06%20151848.png)
 
 ## Component Diagram 📊
 ```mermaid

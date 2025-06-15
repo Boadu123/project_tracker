@@ -2,18 +2,19 @@ package com.example.project_tracker.service;
 
 import com.example.project_tracker.DTO.request.TaskRequestDTO;
 import com.example.project_tracker.DTO.response.TaskResponseDTO;
-import com.example.project_tracker.exceptions.DeveloperNotFoundException;
+import com.example.project_tracker.annotations.Auditable;
+import com.example.project_tracker.exceptions.UserNotFoundException;
 import com.example.project_tracker.exceptions.ProjectNotFoundException;
 import com.example.project_tracker.exceptions.TaskNotFoundException;
 import com.example.project_tracker.mapper.TaskMapper;
-import com.example.project_tracker.models.Developer;
+import com.example.project_tracker.models.User;
 import com.example.project_tracker.models.Project;
 import com.example.project_tracker.models.Task;
-import com.example.project_tracker.repository.DeveloperRepository;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
+import com.example.project_tracker.repository.UserRepository;
+import com.example.project_tracker.service.interfaces.TaskServiceInterface;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -22,35 +23,35 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class TaskService {
+public class TaskService implements TaskServiceInterface {
 
     private final TaskRepository taskRepository;
-    private final DeveloperRepository developerRepository;
+    private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final AuditLogService auditLogService;
 
     public TaskService(TaskRepository taskRepository,
-                       DeveloperRepository developerRepository,
+                       UserRepository userRepository,
                        ProjectRepository projectRepository, AuditLogService auditLogService) {
         this.taskRepository = taskRepository;
-        this.developerRepository = developerRepository;
+        this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.auditLogService = auditLogService;
     }
 
+    @Auditable(actionType = "CREATE", entityType = "Task")
     public TaskResponseDTO createTask(@Valid TaskRequestDTO dto) {
-        Developer developer = null;
+        User developer = null;
 
-        if (dto.getDeveloperId() != null) {
-            developer = developerRepository.findById(dto.getDeveloperId())
-                    .orElseThrow(() -> new DeveloperNotFoundException("Developer with ID " + dto.getDeveloperId() + " not found"));
+        if (dto.getUserId() != null) {
+            developer = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("Developer with ID " + dto.getUserId() + " not found"));
         }
 
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + dto.getProjectId() + " not found"));
         Task task = TaskMapper.toEntity(dto, developer, project);
         Task saved = taskRepository.save(task);
-        auditLogService.logAction("CREATE", "Task", saved.getId().toString(), saved.getDeveloperId().toString(), saved);
         return TaskMapper.toDTO(saved);
     }
 
@@ -73,13 +74,14 @@ public class TaskService {
         return TaskMapper.toDTO(task);
     }
 
+    @Auditable(actionType = "UPDATE", entityType = "Task")
     public TaskResponseDTO updateTask(Long id, @Valid TaskRequestDTO dto) {
         Task existing = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
-        Developer developer = null;
-        if (dto.getDeveloperId() != null) {
-            developer = developerRepository.findById(dto.getDeveloperId())
-                    .orElseThrow(() -> new DeveloperNotFoundException("Developer with ID " + dto.getDeveloperId() + " not found"));
+        User user = null;
+        if (dto.getUserId() != null) {
+            user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("Developer with ID " + dto.getUserId() + " not found"));
         }
 
         Project project = projectRepository.findById(dto.getProjectId())
@@ -89,19 +91,17 @@ public class TaskService {
         existing.setDescription(dto.getDescription());
         existing.setStatus(dto.getStatus());
         existing.setDueDate(dto.getDueDate());
-        existing.setDeveloperId(dto.getDeveloperId());
-        existing.setProjectId(dto.getProjectId());
+        existing.setUser(user);
+        existing.setProject(project);
 
         Task updated = taskRepository.save(existing);
-        auditLogService.logAction("UPDATE", "Task", updated.getId().toString(), updated.getDeveloperId().toString(), updated);
-
         return TaskMapper.toDTO(updated);
     }
 
+    @Auditable(actionType = "DELETE", entityType = "Task")
     public void deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
-        auditLogService.logAction("DELETE", "Task", task.getId().toString(), task.getDeveloperId().toString(), task);
         taskRepository.delete(task);
     }
 
@@ -114,24 +114,11 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
-    public List<TaskResponseDTO> getTasksByDeveloperId(Long developerId) {
-        developerRepository.findById(developerId)
-                .orElseThrow(() -> new DeveloperNotFoundException("Developer with ID " + developerId + " not found"));
-
-        return taskRepository.findByDeveloperId(developerId).stream()
-                .map(TaskMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
     public List<TaskResponseDTO> getOverdueTasks() {
         return taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), "COMPLETED")
                 .stream()
                 .map(TaskMapper::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    public List<TaskRepository.TopDeveloperProjection> getTop5DevelopersWithMostTasks() {
-        return taskRepository.findTop5Developers(PageRequest.of(0, 5));
     }
 
     public List<Project> getProjectsWithoutTasks() {

@@ -1,0 +1,504 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /user/update:
+    put:
+      tags:
+      - user-controller
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /api/tasks/{id}:
+    get:
+      tags:
+      - task-controller
+      operationId: getTaskById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    put:
+      tags:
+      - task-controller
+      operationId: updateTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    delete:
+      tags:
+      - task-controller
+      operationId: deleteTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/projects/{id}:
+    get:
+      tags:
+      - project-controller
+      operationId: getProjectById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    put:
+      tags:
+      - project-controller
+      operationId: updateProject
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    delete:
+      tags:
+      - project-controller
+      operationId: deleteProject
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /auth/register:
+    post:
+      tags:
+      - auth-controller
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /auth/login:
+    post:
+      tags:
+      - auth-controller
+      operationId: loginUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /api/tasks:
+    get:
+      tags:
+      - task-controller
+      operationId: getAllTasks
+      parameters:
+      - name: sortBy
+        in: query
+        required: false
+        schema:
+          type: string
+          default: dueDate
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    post:
+      tags:
+      - task-controller
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/projects:
+    get:
+      tags:
+      - project-controller
+      operationId: getAllProjects
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+    post:
+      tags:
+      - project-controller
+      operationId: createProject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /user/me:
+    get:
+      tags:
+      - user-controller
+      operationId: getLoggedInUser
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /user/all:
+    get:
+      tags:
+      - user-controller
+      operationId: getAllUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /oauth2/success:
+    get:
+      tags:
+      - o-auth-2-controller
+      operationId: oauth2Success
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /api/tasks/by-project/{projectId}:
+    get:
+      tags:
+      - task-controller
+      operationId: getTasksByProjectId
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/logs:
+    get:
+      tags:
+      - audit-log-controller
+      operationId: getAllLogs
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/logs/entity/{entityType}:
+    get:
+      tags:
+      - audit-log-controller
+      operationId: getLogsByEntityType
+      parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/logs/actor/{actorName}:
+    get:
+      tags:
+      - audit-log-controller
+      operationId: getLogsByActorName
+      parameters:
+      - name: actorName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /user/{id}:
+    delete:
+      tags:
+      - user-controller
+      operationId: deleteUserById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /user/delete:
+    delete:
+      tags:
+      - user-controller
+      operationId: deleteUser
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+components:
+  schemas:
+    UserRequestDTO:
+      required:
+      - email
+      - name
+      - password
+      - roles
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        roles:
+          type: string
+          enum:
+          - ROLE_ADMIN
+          - ROLE_MANAGER
+          - ROLE_DEVELOPER
+          - ROLE_CONTRACTOR
+        skills:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    TaskRequestDTO:
+      required:
+      - developerId
+      - dueDate
+      - projectId
+      - status
+      - title
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+          - TODO
+          - IN_PROGRESS
+          - DONE
+        dueDate:
+          type: string
+          format: date
+        projectId:
+          type: integer
+          format: int64
+        developerId:
+          type: integer
+          format: int64
+    ProjectRequestDTO:
+      required:
+      - deadline
+      - description
+      - name
+      - status
+      - task
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        deadline:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+          - STARTED
+          - IN_PROGRESS
+          - COMPLETED
+        task:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    LoginRequestDTO:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string

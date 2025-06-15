@@ -11,9 +11,7 @@ public class ProjectResponseDTO {
     private LocalDate deadline;
     private ProjectStatus status;
 
-    public ProjectResponseDTO() {
-
-    }
+    public ProjectResponseDTO() {}
 
     public ProjectResponseDTO(Long id, String name, String description, LocalDate deadline, ProjectStatus status) {
         this.id = id;

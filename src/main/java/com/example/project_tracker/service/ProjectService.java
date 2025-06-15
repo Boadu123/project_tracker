@@ -2,11 +2,13 @@ package com.example.project_tracker.service;
 
 import com.example.project_tracker.DTO.request.ProjectRequestDTO;
 import com.example.project_tracker.DTO.response.ProjectResponseDTO;
+import com.example.project_tracker.annotations.Auditable;
 import com.example.project_tracker.exceptions.ProjectNotFoundException;
 import com.example.project_tracker.mapper.ProjectMapper;
 import com.example.project_tracker.models.Project;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
+import com.example.project_tracker.service.interfaces.ProjectServiceInterface;
 import org.springframework.cache.annotation.Cacheable;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ProjectService {
+public class ProjectService implements ProjectServiceInterface {
 
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
@@ -28,10 +30,10 @@ public class ProjectService {
         this.auditLogService = auditLogService;
     }
 
+    @Auditable(actionType = "CREATE", entityType = "Project")
     public ProjectResponseDTO createProject(@Valid ProjectRequestDTO requestDTO) {
         Project project = ProjectMapper.toEntity(requestDTO);
         Project saved = projectRepository.save(project);
-        auditLogService.logAction("CREATE", "Project", saved.getId().toString(), saved.getName().toString(), saved);
         return ProjectMapper.toDTO(saved);
     }
 
@@ -49,6 +51,7 @@ public class ProjectService {
         return ProjectMapper.toDTO(project);
     }
 
+    @Auditable(actionType = "UPDATE", entityType = "Project")
     public ProjectResponseDTO updateProject(Long id, @Valid ProjectRequestDTO requestDTO) {
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
@@ -64,14 +67,13 @@ public class ProjectService {
         return ProjectMapper.toDTO(updated);
     }
 
+    @Auditable(actionType = "DELETE", entityType = "Project")
     @Transactional
     public void deleteProject(Long id) {
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
 
         taskRepository.deleteByProjectId(id);
-
-        auditLogService.logAction("DELETE", "Project", existing.getId().toString(), existing.getName().toString(), existing);
 
         projectRepository.delete(existing);
     }

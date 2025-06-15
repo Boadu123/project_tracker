@@ -25,23 +25,27 @@ public class Task {
 
     private LocalDate dueDate;
 
-    @Column(name = "project_id", nullable = false)
-    private Long projectId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
 
-    @Column(name = "developer_id")
-    private Long developerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Task() {}
 
-    public Task(Long id, String title, String description, TaskStatus status, LocalDate dueDate, Long projectId, Long developerId) {
+    public Task(Long id, String title, String description, TaskStatus status, LocalDate dueDate, Project project, User user) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
-        this.projectId = projectId;
-        this.developerId = developerId;
+        this.project = project;
+        this.user = user;
     }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -83,20 +87,20 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public Long getProjectId() {
-        return projectId;
+    public Project getProject() {
+        return project;
     }
 
-    public void setProjectId(Long projectId) {
-        this.projectId = projectId;
+    public void setProject(Project project) {
+        this.project = project;
     }
 
-    public Long getDeveloperId() {
-        return developerId;
+    public User getUser() {
+        return user;
     }
 
-    public void setDeveloperId(Long developerId) {
-        this.developerId = developerId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public static class Builder {
@@ -104,8 +108,8 @@ public class Task {
         private String description;
         private TaskStatus status;
         private LocalDate dueDate;
-        private Long projectId;
-        private Long developerId;
+        private Project project;
+        private User user;
 
         public Builder title(String title) {
             this.title = title;
@@ -127,13 +131,13 @@ public class Task {
             return this;
         }
 
-        public Builder projectId(Long projectId) {
-            this.projectId = projectId;
+        public Builder project(Project project) {
+            this.project = project;
             return this;
         }
 
-        public Builder developerId(Long developerId) {
-            this.developerId = developerId;
+        public Builder user(User user) {
+            this.user = user;
             return this;
         }
 
@@ -143,8 +147,8 @@ public class Task {
             task.setDescription(this.description);
             task.setStatus(this.status);
             task.setDueDate(this.dueDate);
-            task.setProjectId(this.projectId);
-            task.setDeveloperId(this.developerId);
+            task.setProject(this.project);
+            task.setUser(this.user);
             return task;
         }
     }

@@ -6,6 +6,7 @@ import com.example.project_tracker.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -42,6 +43,7 @@ public class TaskController {
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    @PreAuthorize("hasRole('DEVELOPER') and @taskSecurity.isOwner(#id)")
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateTask(@PathVariable Long id,
                                                           @Valid @RequestBody TaskRequestDTO requestDTO) {
@@ -67,9 +69,4 @@ public class TaskController {
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
-    @GetMapping("/by-developer/{developerId}")
-    public ResponseEntity<Map<String, Object>> getTasksByDeveloperId(@PathVariable Long developerId) {
-        List<TaskResponseDTO> response = taskService.getTasksByDeveloperId(developerId);
-        return sucessResponseUtil(HttpStatus.OK, response);
-    }
 }
