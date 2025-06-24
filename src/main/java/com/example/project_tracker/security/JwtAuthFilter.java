@@ -66,5 +66,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Invalid token. Please log in again.\"}");
         }
+
     }
 }

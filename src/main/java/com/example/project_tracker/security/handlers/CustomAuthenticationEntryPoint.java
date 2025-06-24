@@ -1,5 +1,6 @@
 package com.example.project_tracker.security.handlers;
 
+import com.example.project_tracker.annotations.Auditable;
 import com.example.project_tracker.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,20 +19,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         this.auditLogService = auditLogService;
     }
 
+    @Auditable(actionType = "ACCESS_DENIED", entityType = "Security")
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        String attemptedPath = request.getRequestURI();
-        String remoteAddr = request.getRemoteAddr();
-
-        auditLogService.logAction(
-                "UNAUTHORIZED_ACCESS",
-                "Security",
-                null,
-                "Anonymous",
-                "Unauthorized access attempt to: " + attemptedPath + " from IP: " + remoteAddr
-        );
 
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
     }

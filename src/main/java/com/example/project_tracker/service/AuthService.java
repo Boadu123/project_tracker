@@ -2,6 +2,7 @@ package com.example.project_tracker.service;
 
 import com.example.project_tracker.DTO.request.LoginRequestDTO;
 import com.example.project_tracker.DTO.response.LoginResponseDTO;
+import com.example.project_tracker.aspects.LoginAudit;
 import com.example.project_tracker.security.JwtUtils;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ public class AuthService {
         this.jwtUtils = jwtUtils;
     }
 
+    @LoginAudit
     public LoginResponseDTO login(LoginRequestDTO requestDTO) {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

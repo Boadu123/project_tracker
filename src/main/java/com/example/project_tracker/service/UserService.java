@@ -44,6 +44,7 @@ public class UserService implements UserServiceInterface {
         userRepository.save(user);
     }
 
+    @Auditable(actionType = "GET", entityType = "User")
     public UserResponseDTO getLoggedInUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -108,6 +109,7 @@ public class UserService implements UserServiceInterface {
         throw new RuntimeException("User not authenticated");
     }
 
+    @Auditable(actionType = "GET", entityType = "User")
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> new UserResponseDTO(
