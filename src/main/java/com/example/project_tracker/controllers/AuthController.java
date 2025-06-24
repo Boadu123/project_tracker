@@ -3,6 +3,7 @@ package com.example.project_tracker.controllers;
 import com.example.project_tracker.DTO.request.LoginRequestDTO;
 import com.example.project_tracker.DTO.request.UserRequestDTO;
 import com.example.project_tracker.DTO.response.LoginResponseDTO;
+import com.example.project_tracker.aspects.LoginAudit;
 import com.example.project_tracker.service.AuditLogService;
 import com.example.project_tracker.service.AuthService;
 import com.example.project_tracker.service.UserService;
@@ -30,18 +31,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequestDTO requestDTO) {
-        try {
-            LoginResponseDTO responseDTO = authService.login(requestDTO);
-            auditLogService.logAction("LOGIN_SUCCESS","User",null, requestDTO.getEmail(),
-                    "User logged in successfully"
-            );
-            return SucessResponseUtil.sucessResponseUtil(HttpStatus.OK, responseDTO);
-        } catch (BadCredentialsException ex) {
-            auditLogService.logAction("LOGIN_FAILED","User",null,requestDTO.getEmail(),
-                    "Invalid login credentials"
-            );
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-        }
+        LoginResponseDTO responseDTO = authService.login(requestDTO);
+        return SucessResponseUtil.sucessResponseUtil(HttpStatus.OK, responseDTO);
     }
 
     @PostMapping("/register")

@@ -6,12 +6,16 @@ import com.example.project_tracker.annotations.Auditable;
 import com.example.project_tracker.exceptions.ProjectNotFoundException;
 import com.example.project_tracker.mapper.ProjectMapper;
 import com.example.project_tracker.models.Project;
+import com.example.project_tracker.models.User;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
+import com.example.project_tracker.security.CustomUserDetails;
 import com.example.project_tracker.service.interfaces.ProjectServiceInterface;
 import org.springframework.cache.annotation.Cacheable;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,23 +37,29 @@ public class ProjectService implements ProjectServiceInterface {
     @Auditable(actionType = "CREATE", entityType = "Project")
     public ProjectResponseDTO createProject(@Valid ProjectRequestDTO requestDTO) {
         Project project = ProjectMapper.toEntity(requestDTO);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User currentUser = userDetails.getUser();
+        project.setUser(currentUser);
         Project saved = projectRepository.save(project);
         return ProjectMapper.toDTO(saved);
     }
 
-    @Cacheable(value = "projects")
+    @Auditable(actionType = "GET", entityType = "Project")
     public List<ProjectResponseDTO> getAllProjects() {
         return projectRepository.findAll().stream()
                 .map(ProjectMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Auditable(actionType = "GET", entityType = "Project")
     @Cacheable(value = "projectById", key = "#id")
     public ProjectResponseDTO getProjectById(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
         return ProjectMapper.toDTO(project);
     }
+
 
     @Auditable(actionType = "UPDATE", entityType = "Project")
     public ProjectResponseDTO updateProject(Long id, @Valid ProjectRequestDTO requestDTO) {
@@ -62,8 +72,6 @@ public class ProjectService implements ProjectServiceInterface {
         existing.setStatus(requestDTO.getStatus());
 
         Project updated = projectRepository.save(existing);
-        auditLogService.logAction("UPDATE", "Project", updated.getId().toString(), updated.getName().toString(), updated);
-
         return ProjectMapper.toDTO(updated);
     }
 

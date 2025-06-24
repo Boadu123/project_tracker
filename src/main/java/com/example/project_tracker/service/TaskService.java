@@ -13,9 +13,13 @@ import com.example.project_tracker.models.Task;
 import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
 import com.example.project_tracker.repository.UserRepository;
+import com.example.project_tracker.security.CustomUserDetails;
 import com.example.project_tracker.service.interfaces.TaskServiceInterface;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -55,6 +59,7 @@ public class TaskService implements TaskServiceInterface {
         return TaskMapper.toDTO(saved);
     }
 
+    @Auditable(actionType = "GET", entityType = "Task")
     public List<TaskResponseDTO> getAllTasks(String sortBy) {
         List<String> allowedFields = List.of("dueDate", "status", "createdAt");
         if (!allowedFields.contains(sortBy)) {
@@ -68,6 +73,7 @@ public class TaskService implements TaskServiceInterface {
                 .collect(Collectors.toList());
     }
 
+    @Auditable(actionType = "GET", entityType = "Task")
     public TaskResponseDTO getTaskById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
@@ -78,6 +84,18 @@ public class TaskService implements TaskServiceInterface {
     public TaskResponseDTO updateTask(Long id, @Valid TaskRequestDTO dto) {
         Task existing = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
+
+        //  Get the authenticated user's ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String currentUserId = userDetails.getUsername();  // Assuming your user details has this
+
+        //  Ownership check
+        if (existing.getUser() == null || !existing.getUser().getEmail().equals(currentUserId)) {
+            throw new AccessDeniedException("You are not allowed to update this task.");
+        }
+
+        // Proceed with update...
         User user = null;
         if (dto.getUserId() != null) {
             user = userRepository.findById(dto.getUserId())
@@ -105,6 +123,7 @@ public class TaskService implements TaskServiceInterface {
         taskRepository.delete(task);
     }
 
+    @Auditable(actionType = "GET", entityType = "Task")
     public List<TaskResponseDTO> getTasksByProjectId(Long projectId) {
         projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + projectId + " not found"));
