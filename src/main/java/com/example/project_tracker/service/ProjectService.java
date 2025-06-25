@@ -37,12 +37,8 @@ public class ProjectService implements ProjectServiceInterface {
     @Auditable(actionType = "CREATE", entityType = "Project")
     public ProjectResponseDTO createProject(@Valid ProjectRequestDTO requestDTO) {
         Project project = ProjectMapper.toEntity(requestDTO);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User currentUser = userDetails.getUser();
-        project.setUser(currentUser);
-        Project saved = projectRepository.save(project);
-        return ProjectMapper.toDTO(saved);
+        project.setUser(getAuthenticatedUser());
+        return ProjectMapper.toDTO(projectRepository.save(project));
     }
 
     @Auditable(actionType = "GET", entityType = "Project")
@@ -71,8 +67,7 @@ public class ProjectService implements ProjectServiceInterface {
         existing.setDeadline(requestDTO.getDeadline());
         existing.setStatus(requestDTO.getStatus());
 
-        Project updated = projectRepository.save(existing);
-        return ProjectMapper.toDTO(updated);
+        return ProjectMapper.toDTO(projectRepository.save(existing));
     }
 
     @Auditable(actionType = "DELETE", entityType = "Project")
@@ -84,5 +79,13 @@ public class ProjectService implements ProjectServiceInterface {
         taskRepository.deleteByProjectId(id);
 
         projectRepository.delete(existing);
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+            return userDetails.getUser();
+        }
+        throw new RuntimeException("User not authenticated");
     }
 }

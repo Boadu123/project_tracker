@@ -50,15 +50,8 @@ public class UserService implements UserServiceInterface {
 
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            User user = userDetails.getUser();
-
-            return new UserResponseDTO(
-                    user.getId(),
-                    user.getName(),
-                    user.getEmail(),
-                    user.getSkills(),
-                    user.getRoles()
-            );
+            User user = getAuthenticatedUser();
+            return UserResponseDTO.fromEntity(user);
         }
 
         throw new RuntimeException("User not authenticated");
@@ -66,59 +59,29 @@ public class UserService implements UserServiceInterface {
 
     @Auditable(actionType = "UPDATE", entityType = "User")
     public UserResponseDTO updateUserDetails(UserRequestDTO requestDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = getAuthenticatedUser();
 
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            User user = userDetails.getUser();
+        user.setName(requestDTO.getName());
+        user.setSkills(requestDTO.getSkills());
 
-            // Update fields
-            user.setName(requestDTO.getName());
-            user.setSkills(requestDTO.getSkills());
-
-            if (requestDTO.getPassword() != null && !requestDTO.getPassword().isBlank()) {
-                user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
-            }
-
-            User updatedUser = userRepository.save(user);
-
-            return new UserResponseDTO(
-                    updatedUser.getId(),
-                    updatedUser.getName(),
-                    updatedUser.getEmail(),
-                    updatedUser.getSkills(),
-                    updatedUser.getRoles()
-            );
+        if (requestDTO.getPassword() != null && !requestDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         }
 
-        throw new RuntimeException("User not authenticated");
+        User updatedUser = userRepository.save(user);
+        return UserResponseDTO.fromEntity(updatedUser);
     }
 
     @Auditable(actionType = "DELETE", entityType = "User")
     public void deleteLoggedInUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            User user = userDetails.getUser();
-
-            userRepository.deleteById(user.getId());
-            return;
-        }
-
-        throw new RuntimeException("User not authenticated");
+        User user = getAuthenticatedUser();
+        userRepository.deleteById(user.getId());
     }
 
     @Auditable(actionType = "GET", entityType = "User")
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserResponseDTO(
-                        user.getId(),
-                        user.getName(),
-                        user.getEmail(),
-                        user.getSkills(),
-                        user.getRoles()
-                ))
+                .map(user -> UserResponseDTO.fromEntity(user))
                 .collect(Collectors.toList());
     }
 
@@ -128,6 +91,14 @@ public class UserService implements UserServiceInterface {
             throw new RuntimeException("User with ID " + userId + " does not exist");
         }
         userRepository.deleteById(userId);
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            return ((CustomUserDetails) authentication.getPrincipal()).getUser();
+        }
+        throw new RuntimeException("User not authenticated");
     }
 
 }

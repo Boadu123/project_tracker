@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,9 +35,13 @@ public class TaskService implements TaskServiceInterface {
     private final ProjectRepository projectRepository;
     private final AuditLogService auditLogService;
 
+    // Make allowed fields static so it's not created on every method call
+    private static final List<String> ALLOWED_SORT_FIELDS = List.of("dueDate", "status", "createdAt");
+
     public TaskService(TaskRepository taskRepository,
                        UserRepository userRepository,
-                       ProjectRepository projectRepository, AuditLogService auditLogService) {
+                       ProjectRepository projectRepository,
+                       AuditLogService auditLogService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
@@ -45,39 +50,34 @@ public class TaskService implements TaskServiceInterface {
 
     @Auditable(actionType = "CREATE", entityType = "Task")
     public TaskResponseDTO createTask(@Valid TaskRequestDTO dto) {
-        User developer = null;
-
-        if (dto.getUserId() != null) {
-            developer = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException("Developer with ID " + dto.getUserId() + " not found"));
-        }
+        User developer = (dto.getUserId() != null)
+                ? userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + dto.getUserId() + " not found"))
+                : null;
 
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + dto.getProjectId() + " not found"));
+
         Task task = TaskMapper.toEntity(dto, developer, project);
-        Task saved = taskRepository.save(task);
-        return TaskMapper.toDTO(saved);
+        return TaskMapper.toDTO(taskRepository.save(task));
     }
 
     @Auditable(actionType = "GET", entityType = "Task")
     public List<TaskResponseDTO> getAllTasks(String sortBy) {
-        List<String> allowedFields = List.of("dueDate", "status", "createdAt");
-        if (!allowedFields.contains(sortBy)) {
+        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
             throw new IllegalArgumentException("Invalid sort field: " + sortBy);
         }
 
         Sort sort = Sort.by(Sort.Direction.ASC, sortBy);
-
-        return taskRepository.findAll(sort).stream()
-                .map(TaskMapper::toDTO)
-                .collect(Collectors.toList());
+        return mapTasks(taskRepository.findAll(sort));
     }
 
     @Auditable(actionType = "GET", entityType = "Task")
     public TaskResponseDTO getTaskById(Long id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
-        return TaskMapper.toDTO(task);
+        return TaskMapper.toDTO(
+                taskRepository.findById(id)
+                        .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"))
+        );
     }
 
     @Auditable(actionType = "UPDATE", entityType = "Task")
@@ -85,35 +85,30 @@ public class TaskService implements TaskServiceInterface {
         Task existing = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
 
-        //  Get the authenticated user's ID
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String currentUserId = userDetails.getUsername();  // Assuming your user details has this
+        //  Use helper method to get authenticated user
+        User currentUser = getAuthenticatedUser();
 
-        //  Ownership check
-        if (existing.getUser() == null || !existing.getUser().getEmail().equals(currentUserId)) {
+        if (existing.getUser() == null || !existing.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You are not allowed to update this task.");
         }
 
-        // Proceed with update...
-        User user = null;
-        if (dto.getUserId() != null) {
-            user = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException("Developer with ID " + dto.getUserId() + " not found"));
-        }
+        User assignedUser = (dto.getUserId() != null)
+                ? userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("Developer with ID " + dto.getUserId() + " not found"))
+                : null;
 
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + dto.getProjectId() + " not found"));
 
+        // Update task
         existing.setTitle(dto.getTitle());
         existing.setDescription(dto.getDescription());
         existing.setStatus(dto.getStatus());
         existing.setDueDate(dto.getDueDate());
-        existing.setUser(user);
+        existing.setUser(assignedUser);
         existing.setProject(project);
 
-        Task updated = taskRepository.save(existing);
-        return TaskMapper.toDTO(updated);
+        return TaskMapper.toDTO(taskRepository.save(existing));
     }
 
     @Auditable(actionType = "DELETE", entityType = "Task")
@@ -128,16 +123,11 @@ public class TaskService implements TaskServiceInterface {
         projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + projectId + " not found"));
 
-        return taskRepository.findByProjectId(projectId).stream()
-                .map(TaskMapper::toDTO)
-                .collect(Collectors.toList());
+        return mapTasks(taskRepository.findByProjectId(projectId));
     }
 
     public List<TaskResponseDTO> getOverdueTasks() {
-        return taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), "COMPLETED")
-                .stream()
-                .map(TaskMapper::toDTO)
-                .collect(Collectors.toList());
+        return mapTasks(taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), "COMPLETED"));
     }
 
     public List<Project> getProjectsWithoutTasks() {
@@ -148,4 +138,17 @@ public class TaskService implements TaskServiceInterface {
         return taskRepository.getTaskCountGroupedByStatus();
     }
 
+    // Helper to avoid repeating stream mapping logic
+    private List<TaskResponseDTO> mapTasks(List<Task> tasks) {
+        return tasks.stream().map(TaskMapper::toDTO).collect(Collectors.toList());
+    }
+
+    // Centralized authentication to avoid repeated casting
+    private User getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails) {
+            return userDetails.getUser();
+        }
+        throw new RuntimeException("User not authenticated");
+    }
 }

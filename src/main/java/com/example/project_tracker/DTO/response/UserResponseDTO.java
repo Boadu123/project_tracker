@@ -1,6 +1,7 @@
 package com.example.project_tracker.DTO.response;
 
 import com.example.project_tracker.enums.Roles;
+import com.example.project_tracker.models.User;
 
 import java.util.Set;
 
@@ -38,6 +39,16 @@ public class UserResponseDTO {
 
     public Roles getRoles() {
         return roles;
+    }
+
+    public static UserResponseDTO fromEntity(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getSkills(),
+                user.getRoles()
+        );
     }
 
 }
