@@ -15,6 +15,9 @@ import java.util.Map;
 
 import static com.example.project_tracker.utils.SucessResponseUtil.sucessResponseUtil;
 
+/**
+ * TaskController handles task creation, retrieval, update, and deletion.
+ */
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -25,24 +28,28 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    /** Creates a new task. */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createTask(@Valid @RequestBody TaskRequestDTO requestDTO) {
         TaskResponseDTO response = taskService.createTask(requestDTO);
         return sucessResponseUtil(HttpStatus.CREATED, response);
     }
 
+    /** Retrieves all tasks sorted by a given field. */
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllTasks(@RequestParam(defaultValue = "dueDate") String sortBy) {
         List<TaskResponseDTO> response = taskService.getAllTasks(sortBy);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Retrieves a task by its ID. */
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getTaskById(@PathVariable Long id) {
         TaskResponseDTO response = taskService.getTaskById(id);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Updates a task if the user is the owner and has developer role. */
     @PreAuthorize("hasRole('DEVELOPER') and @taskSecurity.isOwner(#id)")
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateTask(@PathVariable Long id,
@@ -51,6 +58,7 @@ public class TaskController {
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Deletes a task by its ID. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
@@ -63,10 +71,12 @@ public class TaskController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /** Retrieves all tasks assigned to a specific project. */
     @GetMapping("/by-project/{projectId}")
     public ResponseEntity<Map<String, Object>> getTasksByProjectId(@PathVariable Long projectId) {
         List<TaskResponseDTO> response = taskService.getTasksByProjectId(projectId);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
+
 
 }

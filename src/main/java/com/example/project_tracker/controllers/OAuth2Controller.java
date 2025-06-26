@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Handles successful OAuth2 login and token generation.
+ */
 @RestController
 @RequestMapping("/oauth2")
 @RequiredArgsConstructor
@@ -19,6 +22,7 @@ public class OAuth2Controller {
 
     private final JwtUtils jwtUtils;
 
+    /** Handles OAuth2 login success and returns a JWT token. */
     @GetMapping("/success")
     public ResponseEntity<?> oauth2Success(Authentication authentication) {
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
