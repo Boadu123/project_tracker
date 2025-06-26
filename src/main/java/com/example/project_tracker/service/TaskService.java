@@ -27,6 +27,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for managing tasks in the project tracker system.
+ * Handles business logic for creating, retrieving, updating, and deleting tasks.
+ * Integrates with the User, Project, and Task repositories, and supports audit logging.
+ *
+ * <p>This service ensures proper access control, validation, and entity relationships
+ * between tasks, projects, and users (developers).</p>
+ *
+ * <p>All mutating operations are annotated with {@link com.example.project_tracker.annotations.Auditable}
+ * for audit trail generation.</p>
+ *
+ * @author
+ */
+
 @Service
 public class TaskService implements TaskServiceInterface {
 
@@ -48,6 +62,15 @@ public class TaskService implements TaskServiceInterface {
         this.auditLogService = auditLogService;
     }
 
+    /**
+     * Creates a new task based on the provided DTO.
+     *
+     * @param dto the task creation request containing title, description, due date, user ID, and project ID
+     * @return the created task as a DTO
+     * @throws UserNotFoundException if the specified user does not exist
+     * @throws ProjectNotFoundException if the specified project does not exist
+     */
+
     @Auditable(actionType = "CREATE", entityType = "Task")
     public TaskResponseDTO createTask(@Valid TaskRequestDTO dto) {
         User developer = (dto.getUserId() != null)
@@ -62,6 +85,14 @@ public class TaskService implements TaskServiceInterface {
         return TaskMapper.toDTO(taskRepository.save(task));
     }
 
+    /**
+     * Retrieves all tasks, sorted by the specified field.
+     *
+     * @param sortBy the field to sort tasks by (e.g., dueDate, status, createdAt)
+     * @return a list of task response DTOs
+     * @throws IllegalArgumentException if an unsupported sort field is provided
+     */
+
     @Auditable(actionType = "GET", entityType = "Task")
     public List<TaskResponseDTO> getAllTasks(String sortBy) {
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
@@ -72,6 +103,14 @@ public class TaskService implements TaskServiceInterface {
         return mapTasks(taskRepository.findAll(sort));
     }
 
+    /**
+     * Retrieves a task by its unique ID.
+     *
+     * @param id the task ID
+     * @return the task as a DTO
+     * @throws TaskNotFoundException if the task with the specified ID does not exist
+     */
+
     @Auditable(actionType = "GET", entityType = "Task")
     public TaskResponseDTO getTaskById(Long id) {
         return TaskMapper.toDTO(
@@ -79,6 +118,18 @@ public class TaskService implements TaskServiceInterface {
                         .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"))
         );
     }
+
+    /**
+     * Updates an existing task with new values from the request DTO.
+     *
+     * @param id the ID of the task to update
+     * @param dto the updated task data
+     * @return the updated task as a DTO
+     * @throws TaskNotFoundException if the task does not exist
+     * @throws UserNotFoundException if the specified user does not exist
+     * @throws ProjectNotFoundException if the specified project does not exist
+     * @throws AccessDeniedException if the authenticated user is not the owner of the task
+     */
 
     @Auditable(actionType = "UPDATE", entityType = "Task")
     public TaskResponseDTO updateTask(Long id, @Valid TaskRequestDTO dto) {
@@ -111,12 +162,27 @@ public class TaskService implements TaskServiceInterface {
         return TaskMapper.toDTO(taskRepository.save(existing));
     }
 
+    /**
+     * Deletes a task by its ID.
+     *
+     * @param id the ID of the task to delete
+     * @throws TaskNotFoundException if the task does not exist
+     */
+
     @Auditable(actionType = "DELETE", entityType = "Task")
     public void deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with ID " + id + " not found"));
         taskRepository.delete(task);
     }
+
+    /**
+     * Retrieves all tasks associated with a specific project.
+     *
+     * @param projectId the ID of the project
+     * @return a list of task DTOs under the specified project
+     * @throws ProjectNotFoundException if the project does not exist
+     */
 
     @Auditable(actionType = "GET", entityType = "Task")
     public List<TaskResponseDTO> getTasksByProjectId(Long projectId) {
@@ -126,24 +192,69 @@ public class TaskService implements TaskServiceInterface {
         return mapTasks(taskRepository.findByProjectId(projectId));
     }
 
+    /**
+     * Retrieves tasks that are overdue and not marked as completed.
+     *
+     * @return a list of overdue task DTOs
+     */
+
     public List<TaskResponseDTO> getOverdueTasks() {
         return mapTasks(taskRepository.findByDueDateBeforeAndStatusNot(LocalDate.now(), "COMPLETED"));
     }
+
+    /**
+     * Retrieves projects that currently have no associated tasks.
+     *
+     * @return a list of project entities with no tasks
+     */
 
     public List<Project> getProjectsWithoutTasks() {
         return projectRepository.findProjectsWithoutTasks();
     }
 
+    /**
+     * Retrieves the count of tasks grouped by their status (e.g., PENDING, COMPLETED).
+     *
+     * @return a list of projections containing status and task count
+     */
+
     public List<TaskRepository.TaskStatusCountProjection> getTaskCountsByStatus() {
         return taskRepository.getTaskCountGroupedByStatus();
     }
 
-    // Helper to avoid repeating stream mapping logic
+    /**
+     * Maps a list of Task entities to their corresponding DTOs.
+     *
+     * @param tasks list of Task entities
+     * @return list of TaskResponseDTOs
+     */
+
     private List<TaskResponseDTO> mapTasks(List<Task> tasks) {
         return tasks.stream().map(TaskMapper::toDTO).collect(Collectors.toList());
     }
 
-    // Centralized authentication to avoid repeated casting
+    /**
+     * Retrieves all tasks assigned to a specific user.
+     *
+     * @param userId the ID of the user
+     * @return a list of TaskResponseDTOs assigned to the user
+     * @throws UserNotFoundException if the user does not exist
+     */
+    @Auditable(actionType = "GET", entityType = "Task")
+    public List<TaskResponseDTO> getTasksByUserId(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
+
+        return mapTasks(taskRepository.findByUserId(userId));
+    }
+
+    /**
+     * Retrieves the currently authenticated user from the security context.
+     *
+     * @return the authenticated User entity
+     * @throws RuntimeException if authentication information is missing or invalid
+     */
+
     private User getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails) {

@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+/**
+ * Aspect for logging actions annotated with @Auditable after successful execution.
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -19,6 +22,12 @@ public class AuditAspect {
 
     private final AuditLogService auditLogService;
 
+    /**
+     * Logs audit information after a method annotated with @Auditable completes.
+     *
+     * @param joinPoint the intercepted method
+     * @param result    the returned object from the method
+     */
     @AfterReturning(pointcut = "@annotation(com.example.project_tracker.annotations.Auditable)", returning = "result")
     public void logAudit(JoinPoint joinPoint, Object result) {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
@@ -38,6 +47,9 @@ public class AuditAspect {
         );
     }
 
+    /**
+     * Extracts entity ID from method arguments if present, else generates a UUID.
+     */
     private String extractEntityIdFromArgs(Object[] args) {
         for (Object arg : args) {
             if (arg instanceof Long) {
@@ -47,6 +59,9 @@ public class AuditAspect {
         return UUID.randomUUID().toString();
     }
 
+    /**
+     * Retrieves the current authenticated user's name or returns 'SYSTEM'.
+     */
     private String getCurrentUser() {
         try {
             return SecurityContextHolder.getContext().getAuthentication().getName();

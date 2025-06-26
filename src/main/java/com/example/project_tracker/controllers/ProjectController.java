@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ProjectController handles CRUD operations for projects.
+ */
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
@@ -23,24 +26,28 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
+    /** Creates a new project. */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createProject(@Valid @RequestBody ProjectRequestDTO requestDTO) {
         ProjectResponseDTO response = projectService.createProject(requestDTO);
         return sucessResponseUtil(HttpStatus.CREATED, response);
     }
 
+    /** Retrieves all projects. */
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllProjects() {
         List<ProjectResponseDTO> response = projectService.getAllProjects();
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Retrieves a project by ID. */
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getProjectById(@PathVariable Long id) {
         ProjectResponseDTO response = projectService.getProjectById(id);
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Updates an existing project by ID. */
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateProject(@PathVariable Long id,
                                                              @Valid @RequestBody ProjectRequestDTO requestDTO) {
@@ -48,16 +55,15 @@ public class ProjectController {
         return sucessResponseUtil(HttpStatus.OK, response);
     }
 
+    /** Deletes a project by ID. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", HttpStatus.OK.value());
-        response.put("message", "Developer deleted successfully");
+        response.put("message", "Project deleted successfully");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
 }

@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 
+/**
+ * Aspect for auditing login attempts using the @LoginAudit annotation.
+ * Logs both successful and failed login events to the audit trail.
+ */
 @Aspect
 @Component
 public class LoginAuditAspect {
@@ -16,12 +20,19 @@ public class LoginAuditAspect {
     @Autowired
     private AuditLogService auditLogService;
 
+    /**
+     * Intercepts methods annotated with @LoginAudit and logs login outcomes.
+     *
+     * @param joinPoint the join point of the method
+     * @return the result of the intercepted method
+     * @throws Throwable if the original method throws
+     */
     @Around("@annotation(com.example.project_tracker.aspects.LoginAudit)")
     public Object logLoginAction(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         LoginRequestDTO loginRequest = null;
 
-        // Find LoginRequestDTO in method arguments
+        // Extract LoginRequestDTO argument for logging
         for (Object arg : args) {
             if (arg instanceof LoginRequestDTO) {
                 loginRequest = (LoginRequestDTO) arg;
@@ -30,7 +41,8 @@ public class LoginAuditAspect {
         }
 
         try {
-            Object result = joinPoint.proceed(); // Proceed to login method
+            // Proceed with method execution and log success
+            Object result = joinPoint.proceed();
             auditLogService.logAction(
                     "LOGIN_SUCCESS",
                     "User",
@@ -40,6 +52,7 @@ public class LoginAuditAspect {
             );
             return result;
         } catch (BadCredentialsException ex) {
+            // Log failed login attempt
             auditLogService.logAction(
                     "LOGIN_FAILED",
                     "User",
@@ -51,4 +64,3 @@ public class LoginAuditAspect {
         }
     }
 }
-
