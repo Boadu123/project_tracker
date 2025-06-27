@@ -11,6 +11,7 @@ import com.example.project_tracker.repository.ProjectRepository;
 import com.example.project_tracker.repository.TaskRepository;
 import com.example.project_tracker.security.CustomUserDetails;
 import com.example.project_tracker.service.interfaces.ProjectServiceInterface;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -69,6 +70,7 @@ public class ProjectService implements ProjectServiceInterface {
      * @return a list of project response DTOs
      */
     @Auditable(actionType = "GET", entityType = "Project")
+    @Cacheable("projects")
     public List<ProjectResponseDTO> getAllProjects() {
         return projectRepository.findAll().stream()
                 .map(ProjectMapper::toDTO)
@@ -99,6 +101,7 @@ public class ProjectService implements ProjectServiceInterface {
      * @throws ProjectNotFoundException if the project does not exist
      */
     @Auditable(actionType = "UPDATE", entityType = "Project")
+    @CacheEvict(value = "tasks", key = "#userId")
     public ProjectResponseDTO updateProject(Long id, @Valid ProjectRequestDTO requestDTO) {
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with ID " + id + " not found"));
@@ -118,6 +121,7 @@ public class ProjectService implements ProjectServiceInterface {
      * @throws ProjectNotFoundException if the project does not exist
      */
     @Auditable(actionType = "DELETE", entityType = "Project")
+    @CacheEvict(value = "tasks", key = "#userId")
     @Transactional
     public void deleteProject(Long id) {
         Project existing = projectRepository.findById(id)

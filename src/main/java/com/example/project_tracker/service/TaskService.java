@@ -15,7 +15,10 @@ import com.example.project_tracker.repository.TaskRepository;
 import com.example.project_tracker.repository.UserRepository;
 import com.example.project_tracker.security.CustomUserDetails;
 import com.example.project_tracker.service.interfaces.TaskServiceInterface;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -48,6 +51,7 @@ public class TaskService implements TaskServiceInterface {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final AuditLogService auditLogService;
+    private final Counter taskCounter;
 
     // Make allowed fields static so it's not created on every method call
     private static final List<String> ALLOWED_SORT_FIELDS = List.of("dueDate", "status", "createdAt");
@@ -55,11 +59,12 @@ public class TaskService implements TaskServiceInterface {
     public TaskService(TaskRepository taskRepository,
                        UserRepository userRepository,
                        ProjectRepository projectRepository,
-                       AuditLogService auditLogService) {
+                       AuditLogService auditLogService, MeterRegistry meterRegistry) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.auditLogService = auditLogService;
+        this.taskCounter = meterRegistry.counter("tasks.processed.count");
     }
 
     /**
@@ -241,6 +246,7 @@ public class TaskService implements TaskServiceInterface {
      * @throws UserNotFoundException if the user does not exist
      */
     @Auditable(actionType = "GET", entityType = "Task")
+    @Cacheable("tasks")
     public List<TaskResponseDTO> getTasksByUserId(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
