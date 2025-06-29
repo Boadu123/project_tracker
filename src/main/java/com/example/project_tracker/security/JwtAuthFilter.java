@@ -18,6 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * JWT Authentication Filter that processes incoming requests and validates JWT tokens.
+ * <p>
+ * Standardizes error responses for token-related failures while maintaining the filter chain.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -31,8 +36,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        String jwt;
-        String userEmail;
 
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -40,8 +43,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 return;
             }
 
-            jwt = authHeader.substring(7);
-            userEmail = jwtUtils.getEmailFromJwt(jwt);
+            String jwt = authHeader.substring(7);
+            String userEmail = jwtUtils.getEmailFromJwt(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -49,7 +52,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (jwtUtils.validateToken(jwt)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
@@ -58,14 +60,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token expired. Please log in again.\"}");
-        } catch (MalformedJwtException | SignatureException | IllegalArgumentException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid token. Please log in again.\"}");
+            sendErrorResponse(response, "Token expired", HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (MalformedJwtException | SignatureException e) {
+            sendErrorResponse(response, "Invalid token", HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (IllegalArgumentException e) {
+            sendErrorResponse(response, "Missing or malformed token", HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
 
+    private void sendErrorResponse(HttpServletResponse response, String message, int status) throws IOException {
+        response.setContentType("application/json");
+        response.setStatus(status);
+        response.getWriter().write(String.format(
+                """
+                {
+                    "message": "%s",
+                    "timestamp": "%s",
+                    "status": %d
+                }
+                """,
+                message,
+                java.time.Instant.now().toString(),
+                status
+        ));
     }
 }
